@@ -1,0 +1,54 @@
+{
+  "montanas": [
+    {
+      "id": "aneto",
+      "nombre": "Aneto",
+      "altura": 3404,
+      "cordillera": "Pirineos",
+      "coordenadas": {
+        "lat": 42.6314,
+        "lng": 0.6575
+      }
+    },
+    {
+      "id": "posets",
+      "nombre": "Posets",
+      "altura": 3369,
+      "cordillera": "Pirineos",
+      "coordenadas": {
+        "lat": 42.6475,
+        "lng": 0.3978
+      }
+    },
+    {
+      "id": "perdiguero",
+      "nombre": "Perdiguero",
+      "altura": 3221,
+      "cordillera": "Pirineos",
+      "coordenadas": {
+        "lat": 42.6897,
+        "lng": 0.5264
+      }
+    },
+    {
+      "id": "moncayo",
+      "nombre": "Moncayo",
+      "altura": 2315,
+      "cordillera": "Sistema Ibérico",
+      "coordenadas": {
+        "lat": 41.7875,
+        "lng": -1.8375
+      }
+    },
+    {
+      "id": "perdido",
+      "nombre": "Monte Perdido",
+      "altura": 3355,
+      "cordillera": "Pirineos",
+      "coordenadas": {
+        "lat": 42.6744,
+        "lng": 0.0289
+      }
+    }
+  ]
+}
