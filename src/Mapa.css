@@ -1,3 +1,14 @@
+.svg-container {
+  /* Set a fixed height or a max-height */
+  height: 80vh; /* This sets the height to 80% of the viewport height */
+  /* OR you can use max-height: 800px; */
+
+  /* Ensure the container is centered and has proper display properties */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .comarca {
   transition: all 0.3s ease-in-out;
   fill: #00ff08;
@@ -10,7 +21,6 @@
 }
 
 svg {
-  max-height: 100vh;
   background: linear-gradient(
       to bottom,
       rgba(0, 0, 0, 1),
@@ -39,36 +49,31 @@ svg {
 }
 
 .acierto {
-  fill: #4caf50 !important;
+  fill: #4caf50;
   filter: drop-shadow(0 0 8px rgba(76, 175, 80, 0.7));
 }
 
 .fallo {
-  fill: #f44336 !important;
+  fill: #f44336;
   filter: drop-shadow(0 0 8px rgba(244, 67, 54, 0.7));
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
+.rio {
+  transition: all 0.5s ease-in-out;
 }
 
-@keyframes shake {
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-  25% {
-    transform: translate(-5px, 0);
-  }
-  75% {
-    transform: translate(5px, 0);
-  }
+.rio:hover {
+  cursor: pointer;
+  stroke: orange;
+  scale: 1.001;
+}
+
+.rio.fallo {
+  fill: none;
+  stroke: red;
+}
+
+.rio.acierto {
+  fill: none;
+  stroke: green;
 }

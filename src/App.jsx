@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import MapaAragon from "./components/MapaAragon";
+import Mapa from "./components/MapaAragon";
 import Menu from "./components/Menu";
 import comarcasData from "./data/comarcas.json";
+import riosData from "./data/rios.json";
 import "./App.css";
 
-// Game states
 const GAME_STATES = {
   MENU: "menu",
   PLAYING: "playing",
@@ -15,32 +15,16 @@ export default function App() {
   const [gameState, setGameState] = useState(GAME_STATES.MENU);
   const [user, setUser] = useState(null);
   const [comarcas] = useState([...comarcasData.comarcas]);
-  const [comarcasRestantes, setComarcasRestantes] = useState([]);
-  const [comarcaActual, setComarcaActual] = useState(null);
-  const [comarcaSeleccionada, setComarcaSeleccionada] = useState(null);
+  const [rios] = useState([...riosData.rios]);
+  const [elementosRestantes, setElementosRestantes] = useState([]);
+  const [elementoActual, setElementoActual] = useState(null);
+  const [elementoSeleccionado, setElementoSeleccionado] = useState(null);
+  const [modo, setModo] = useState(null);
   const [resultados, setResultados] = useState({});
   const [puntuacion, setPuntuacion] = useState({ aciertos: 0, intentos: 0 });
-  const [juegoTerminado, setJuegoTerminado] = useState(false);
   const [tiempoTranscurrido, setTiempoTranscurrido] = useState(0);
   const [intervalId, setIntervalId] = useState(null);
   const [timerIniciado, setTimerIniciado] = useState(false);
-  const [mostrarBandera, setMostrarBandera] = useState(false);
-  const [banderaActual, setBanderaActual] = useState("");
-
-  const startGame = (username) => {
-    setUser({ name: username });
-    setResultados({});
-    setPuntuacion({ aciertos: 0, intentos: 0 });
-    setJuegoTerminado(false);
-    setTiempoTranscurrido(0);
-    setComarcaSeleccionada(null);
-
-    // Barajar las comarcas y comenzar el juego
-    const comarcasBarajadas = [...comarcas].sort(() => Math.random() - 0.5);
-    setComarcasRestantes(comarcasBarajadas);
-    setComarcaActual(comarcasBarajadas[0]);
-    setGameState(GAME_STATES.PLAYING);
-  };
 
   useEffect(() => {
     let id;
@@ -50,38 +34,58 @@ export default function App() {
       }, 1000);
       setIntervalId(id);
     }
-
     return () => {
       if (id) clearInterval(id);
     };
   }, [timerIniciado]);
 
-  const handleComarcaSeleccionada = (id) => {
-    if (comarcaSeleccionada || juegoTerminado || !comarcaActual) return;
+  const startGame = (username, gameMode) => {
+    setUser({ name: username });
+    setResultados({});
+    setPuntuacion({ aciertos: 0, intentos: 0 });
+    setTiempoTranscurrido(0);
+    setElementoSeleccionado(null);
+    setModo(gameMode);
+    setTimerIniciado(false);
 
-    // Iniciar el temporizador en el primer intento
+    let datosModo;
+    if (gameMode === "comarcas") {
+      datosModo = comarcas;
+    } else if (gameMode === "rios") {
+      datosModo = rios;
+    }
+
+    if (datosModo && datosModo.length > 0) {
+      const elementosBarajados = [...datosModo].sort(() => Math.random() - 0.5);
+      setElementosRestantes(elementosBarajados);
+      setElementoActual(elementosBarajados[0]);
+    }
+
+    setGameState(GAME_STATES.PLAYING);
+  };
+
+  const handleElementoSeleccionado = (id) => {
+    if (elementoSeleccionado || !elementoActual) return;
     if (!timerIniciado) {
       setTimerIniciado(true);
     }
 
-    // Ocultar bandera si se muestra una anterior
-    setMostrarBandera(false);
-
-    const comarcaClickada = comarcas.find((c) => c.id === id);
-    if (!comarcaClickada) return;
-
-    const esCorrecto = comarcaActual.id === comarcaClickada.id;
-    setComarcaSeleccionada(comarcaClickada);
-
-    // Mostrar bandera si la respuesta es correcta
-    if (esCorrecto && comarcaActual.bandera) {
-      setBanderaActual(comarcaActual.bandera);
-      setMostrarBandera(true);
+    let elementosActuales;
+    if (modo === "comarcas") {
+      elementosActuales = comarcas;
+    } else if (modo === "rios") {
+      elementosActuales = rios;
     }
+
+    const elementoClickado = elementosActuales.find((e) => e.id === id);
+    if (!elementoClickado) return;
+
+    const esCorrecto = elementoActual.id === elementoClickado.id;
+    setElementoSeleccionado(elementoClickado);
 
     const nuevosResultados = {
       ...resultados,
-      [comarcaActual.id]: esCorrecto ? "acierto" : "fallo",
+      [elementoActual.id]: esCorrecto ? "acierto" : "fallo",
     };
     setResultados(nuevosResultados);
 
@@ -91,39 +95,32 @@ export default function App() {
     }));
 
     setTimeout(() => {
-      let nuevasComarcasRestantes;
+      let nuevosElementosRestantes;
       if (esCorrecto) {
-        nuevasComarcasRestantes = comarcasRestantes.filter(
-          (c) => c.id !== comarcaActual.id
+        nuevosElementosRestantes = elementosRestantes.filter(
+          (e) => e.id !== elementoActual.id
         );
       } else {
-        nuevasComarcasRestantes = comarcasRestantes;
+        nuevosElementosRestantes = elementosRestantes;
       }
 
-      setComarcasRestantes(nuevasComarcasRestantes);
-      setComarcaSeleccionada(null);
+      setElementosRestantes(nuevosElementosRestantes);
+      setElementoSeleccionado(null);
 
-      if (nuevasComarcasRestantes.length > 0) {
+      if (nuevosElementosRestantes.length > 0) {
         const indiceAleatorio = Math.floor(
-          Math.random() * nuevasComarcasRestantes.length
+          Math.random() * nuevosElementosRestantes.length
         );
-        setComarcaActual(nuevasComarcasRestantes[indiceAleatorio]);
+        setElementoActual(nuevosElementosRestantes[indiceAleatorio]);
       } else {
-        setJuegoTerminado(true);
         setGameState(GAME_STATES.FINISHED);
+        clearInterval(intervalId);
       }
     }, 1000);
   };
 
   const reiniciarJuego = () => {
     if (intervalId) clearInterval(intervalId);
-    setPuntuacion({ aciertos: 0, intentos: 0 });
-    setResultados({});
-    setJuegoTerminado(false);
-    setTiempoTranscurrido(0);
-    setComarcaSeleccionada(null);
-    setComarcasRestantes([]);
-    setComarcaActual(null);
     setGameState(GAME_STATES.MENU);
   };
 
@@ -135,18 +132,18 @@ export default function App() {
       .padStart(2, "0")}`;
   };
 
-  const totalComarcas = comarcas.length;
-  const comarcasCompletadas = totalComarcas - comarcasRestantes.length;
+  const totalElementos = modo === "comarcas" ? comarcas.length : rios.length;
+  const elementosCompletados = totalElementos - elementosRestantes.length;
   const porcentajeCompletado =
-    comarcas.length > 0
-      ? Math.round((comarcasCompletadas / totalComarcas) * 100)
+    totalElementos > 0
+      ? Math.round((elementosCompletados / totalElementos) * 100)
       : 0;
 
   if (gameState === GAME_STATES.MENU) {
     return <Menu onStartGame={startGame} />;
   }
 
-  if (gameState === GAME_STATES.PLAYING && !comarcaActual) {
+  if (gameState === GAME_STATES.PLAYING && !elementoActual) {
     return <div className="loading">Cargando juego...</div>;
   }
 
@@ -189,10 +186,9 @@ export default function App() {
         </div>
       </div>
       <header>
-        <h1>¿Dónde está {comarcaActual?.nombre}?</h1>
+        <h1>¿Dónde está {elementoActual?.nombre}?</h1>
         <div className="puntuacion">
-          Completadas: {comarcasCompletadas} de {totalComarcas} | Aciertos:{" "}
-          {puntuacion.aciertos}
+          Completados: {elementosCompletados} de {totalElementos}
         </div>
         <div className="barra-progreso">
           <div
@@ -203,47 +199,21 @@ export default function App() {
       </header>
 
       <main>
-        {!juegoTerminado ? (
-          <div className="game-layout">
-            <div className="panel-quiz">
-              <h3>Haz clic en la comarca:</h3>
-              <h2>{comarcaActual?.nombre}</h2>
-              {mostrarBandera && banderaActual && (
-                <div className="bandera-container">
-                  <img
-                    src={banderaActual}
-                    alt={`Bandera de ${comarcaActual?.nombre}`}
-                    className="bandera"
-                  />
-                </div>
-              )}
-            </div>
-            <div className="mapa-container">
-              <MapaAragon 
-        comarcas={comarcas} 
-        resultados={resultados} 
-        onClickElemento={handleComarcaSeleccionada} 
-      />
-            </div>
+        <div className="game-layout">
+          <div className="panel-quiz">
+            <h3>Haz clic en el mapa:</h3>
+            <h2>{elementoActual?.nombre}</h2>
           </div>
-        ) : (
-          <div className="juego-terminado">
-            <h2>¡Felicidades! 🎉</h2>
-            <p>¡Has completado todas las comarcas de Aragón!</p>
-            <p>Puntuación final: </p>
-            <div className="puntuacion-final">
-              {puntuacion.aciertos} de {puntuacion.intentos} aciertos
-              <br />(
-              {puntuacion.intentos > 0
-                ? Math.round((puntuacion.aciertos / puntuacion.intentos) * 100)
-                : 0}
-              % de aciertos)
-            </div>
-            <button onClick={reiniciarJuego} className="boton-reiniciar">
-              Jugar de nuevo
-            </button>
+          <div className="mapa-container">
+            <Mapa
+              modo={modo}
+              comarcas={comarcas}
+              rios={rios}
+              resultados={resultados}
+              onClickElemento={handleElementoSeleccionado}
+            />
           </div>
-        )}
+        </div>
       </main>
     </div>
   );

@@ -8,22 +8,13 @@ const Menu = ({ onStartGame }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (username.trim()) {
-      onStartGame(username.trim(), "comarcas");
+      setShowGameModes(true);
     }
   };
 
   const handleGameModeSelect = (gameMode) => {
-    onStartGame(username, gameMode);
+    onStartGame(username.trim(), gameMode);
   };
-
-  const modosDeJuego = [
-    {
-      id: "comarcas",
-      nombre: "Comarcas",
-      descripcion: "Aprende las comarcas de Aragón",
-      icono: "🗺️",
-    },
-  ];
 
   if (!showGameModes) {
     return (
@@ -56,16 +47,11 @@ const Menu = ({ onStartGame }) => {
         </button>
         <button
           className="game-mode-button"
-          onClick={() => handleGameModeSelect("montanas")}
+          onClick={() => handleGameModeSelect("rios")}
         >
-          Montañas de Aragón (Círculos)
+          Ríos de Aragón
         </button>
-        <button
-          className="game-mode-button"
-          onClick={() => handleGameModeSelect("triangulos")}
-        >
-          Montañas de Aragón (Triángulos)
-        </button>
+        {/* Añade más botones para otros modos si lo deseas */}
       </div>
     </div>
   );
