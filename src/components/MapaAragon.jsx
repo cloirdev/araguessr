@@ -28,7 +28,6 @@ export default function Mapa({
           }}
         />
 
-        {/* Mapeo de los elementos del juego (ríos o comarcas) */}
         {elementosARenderizar.map((elemento) => {
           let clase = modo === "rios" ? "rio" : "comarca";
           if (resultados[elemento.id] === "acierto") {
