@@ -1,4 +1,3 @@
-/* Estilos generales */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -36,7 +35,6 @@ body {
   }
 }
 
-/* Encabezado */
 header {
   text-align: center;
   background-color: #1e3a8a;
@@ -51,7 +49,6 @@ header {
   color: #fbbf24;
 }
 
-/* Contenedor principal */
 main {
   background: rgba(2, 1, 17, 0.932);
   border-radius: 8px;
@@ -67,7 +64,6 @@ main {
   border-radius: 8px;
 }
 
-/* Estilos del SVG */
 .svg-container {
   width: 100%;
   height: auto;
@@ -97,7 +93,6 @@ main {
   stroke: #dc2626;
 }
 
-/* Botón de reinicio */
 .boton-reiniciar {
   display: block;
   width: 100%;
@@ -118,7 +113,6 @@ main {
   background-color: #1e3a8a;
 }
 
-/* Barra de progreso */
 .barra-progreso {
   width: 100%;
   height: 10px;
@@ -134,7 +128,6 @@ main {
   transition: width 0.3s ease;
 }
 
-/* Mensaje de juego terminado */
 .juego-terminado {
   text-align: center;
   padding: 30px;
@@ -169,7 +162,6 @@ main {
   border-left: 5px solid #3b82f6;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   header h1 {
     font-size: 1.5rem;

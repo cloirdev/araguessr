@@ -1,9 +1,5 @@
 .svg-container {
-  /* Set a fixed height or a max-height */
-  height: 80vh; /* This sets the height to 80% of the viewport height */
-  /* OR you can use max-height: 800px; */
-
-  /* Ensure the container is centered and has proper display properties */
+  height: 80vh;
   display: flex;
   justify-content: center;
   align-items: center;
