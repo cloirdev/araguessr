@@ -1,0 +1,43 @@
+{
+  "municipios": [
+    {
+      "id": "jaca",
+      "nombre": "Jaca",
+      "principal": true
+    },
+    {
+      "id": "sabinanigo",
+      "nombre": "Sabiñánigo"
+    },
+    {
+      "id": "huesca",
+      "nombre": "Huesca",
+      "principal": true
+    },
+    {
+      "id": "zaragoza",
+      "nombre": "Zaragoza",
+      "principal": true
+    },
+    {
+      "id": "teruel",
+      "nombre": "Teruel",
+      "principal": true
+    },
+    {
+      "id": "tarazona",
+      "nombre": "Tarazona",
+      "principal": true
+    },
+    {
+      "id": "boltana",
+      "nombre": "Boltaña",
+      "principal": false
+    },
+    {
+      "id": "ainsa",
+      "nombre": "Aínsa",
+      "principal": false
+    }
+  ]
+}

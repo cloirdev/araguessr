@@ -9,6 +9,8 @@
   transition: all 0.3s ease-in-out;
   fill: #00ff08;
   cursor: pointer;
+  stroke: white;
+  stroke-width: 5;
 }
 
 .comarca:hover {
@@ -56,12 +58,16 @@ svg {
 
 .rio {
   transition: all 0.5s ease-in-out;
+  stroke-width: 30;
+  stroke: blue;
+  cursor: pointer;
+  fill: none;
 }
 
 .rio:hover {
   cursor: pointer;
   stroke: orange;
-  scale: 1.001;
+  stroke-width: 40;
 }
 
 .rio.fallo {
@@ -72,4 +78,29 @@ svg {
 .rio.acierto {
   fill: none;
   stroke: green;
+}
+
+.contorno {
+  fill: rgba(255, 255, 255, 0.801);
+  stroke: black;
+  stroke-width: 50;
+}
+
+.municipio {
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+  r: 100px;
+}
+
+.municipio:hover {
+  fill: #555555;
+  filter: brightness(1.1);
+}
+
+.municipio.acierto {
+  fill: #4caf50;
+}
+
+.municipio.fallo {
+  fill: #f44336;
 }
