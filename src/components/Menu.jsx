@@ -4,6 +4,8 @@ import "../Menu.css";
 const Menu = ({ onStartGame }) => {
   const [username, setUsername] = useState("");
   const [showGameModes, setShowGameModes] = useState(false);
+  const [gameMode, setGameMode] = useState(null);
+  const [difficulty, setDifficulty] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -12,14 +14,29 @@ const Menu = ({ onStartGame }) => {
     }
   };
 
-  const handleGameModeSelect = (gameMode) => {
-    onStartGame(username.trim(), gameMode);
+  const handleModeSelect = (mode) => {
+    if (mode === "comarcas") {
+      onStartGame(username.trim(), mode, null);
+    } else {
+      setGameMode(mode);
+    }
+  };
+
+  const handleDifficultySelect = (diff) => {
+    setDifficulty(diff);
+    onStartGame(username.trim(), gameMode, diff);
   };
 
   if (!showGameModes) {
     return (
       <div className="menu-container">
-        <h1>Geografía de Aragón</h1>
+        <h1>Araguessr</h1>
+        <p>Bienvenido al portal de la geografía aragonesa.</p>
+        <p>
+          Aquí te enfrentarás a los retos más desafíantes de toda la Corona de
+          Aragón.
+        </p>
+        <p>¿Cómo te llamas?</p>
         <form onSubmit={handleSubmit} className="login-form">
           <input
             type="text"
@@ -34,24 +51,58 @@ const Menu = ({ onStartGame }) => {
     );
   }
 
+  if (!gameMode) {
+    return (
+      <div className="menu-container">
+        <h1>Hola, {username}!</h1>
+        <h2>Elige un modo de juego:</h2>
+        <div className="game-modes">
+          <button
+            className="game-mode-button"
+            onClick={() => handleModeSelect("comarcas")}
+          >
+            Comarcas de Aragón
+          </button>
+          <button
+            className="game-mode-button"
+            onClick={() => handleModeSelect("rios")}
+          >
+            Ríos de Aragón
+          </button>
+          <button
+            className="game-mode-button"
+            onClick={() => handleModeSelect("municipios")}
+          >
+            Municipios de Aragón
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="menu-container">
-      <h1>Hola, {username}!</h1>
-      <h2>Elige un modo de juego:</h2>
+      <h1>Modo {gameMode}</h1>
+      <h2>Elige la dificultad:</h2>
       <div className="game-modes">
         <button
           className="game-mode-button"
-          onClick={() => handleGameModeSelect("comarcas")}
+          onClick={() => handleDifficultySelect("facil")}
         >
-          Comarcas de Aragón
+          Fácil
         </button>
         <button
           className="game-mode-button"
-          onClick={() => handleGameModeSelect("rios")}
+          onClick={() => handleDifficultySelect("media")}
         >
-          Ríos de Aragón
+          Media
         </button>
-        {/* Añade más botones para otros modos si lo deseas */}
+        <button
+          className="game-mode-button"
+          onClick={() => handleDifficultySelect("dificil")}
+        >
+          Difícil
+        </button>
       </div>
     </div>
   );

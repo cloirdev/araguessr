@@ -3,6 +3,7 @@ import Mapa from "./components/MapaAragon";
 import Menu from "./components/Menu";
 import comarcasData from "./data/comarcas.json";
 import riosData from "./data/rios.json";
+import municipiosData from "./data/municipios.json";
 import "./App.css";
 
 const GAME_STATES = {
@@ -16,10 +17,11 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [comarcas] = useState([...comarcasData.comarcas]);
   const [rios] = useState([...riosData.rios]);
+  const [municipios] = useState([...municipiosData.municipios]);
   const [elementosRestantes, setElementosRestantes] = useState([]);
   const [elementoActual, setElementoActual] = useState(null);
-  const [elementoSeleccionado, setElementoSeleccionado] = useState(null);
   const [modo, setModo] = useState(null);
+  const [dificultad, setDificultad] = useState(null);
   const [resultados, setResultados] = useState({});
   const [puntuacion, setPuntuacion] = useState({ aciertos: 0, intentos: 0 });
   const [tiempoTranscurrido, setTiempoTranscurrido] = useState(0);
@@ -39,20 +41,33 @@ export default function App() {
     };
   }, [timerIniciado]);
 
-  const startGame = (username, gameMode) => {
+  const startGame = (username, gameMode, difficulty) => {
     setUser({ name: username });
     setResultados({});
     setPuntuacion({ aciertos: 0, intentos: 0 });
     setTiempoTranscurrido(0);
-    setElementoSeleccionado(null);
     setModo(gameMode);
+    setDificultad(difficulty);
     setTimerIniciado(false);
 
     let datosModo;
     if (gameMode === "comarcas") {
       datosModo = comarcas;
     } else if (gameMode === "rios") {
-      datosModo = rios;
+      if (difficulty === "facil") {
+        datosModo = rios.filter((r) => r.dificultad === "facil");
+      } else if (difficulty === "media") {
+        datosModo = rios.filter(
+          (r) => r.dificultad === "facil" || r.dificultad === "media"
+        );
+      } else {
+        datosModo = rios;
+      }
+    } else if (gameMode === "municipios") {
+      datosModo =
+        difficulty === "facil"
+          ? municipios.filter((m) => m.principal)
+          : municipios;
     }
 
     if (datosModo && datosModo.length > 0) {
@@ -65,7 +80,7 @@ export default function App() {
   };
 
   const handleElementoSeleccionado = (id) => {
-    if (elementoSeleccionado || !elementoActual) return;
+    if (!elementoActual) return;
     if (!timerIniciado) {
       setTimerIniciado(true);
     }
@@ -74,14 +89,26 @@ export default function App() {
     if (modo === "comarcas") {
       elementosActuales = comarcas;
     } else if (modo === "rios") {
-      elementosActuales = rios;
+      if (dificultad === "facil") {
+        elementosActuales = rios.filter((r) => r.dificultad === "facil");
+      } else if (dificultad === "media") {
+        elementosActuales = rios.filter(
+          (r) => r.dificultad === "facil" || r.dificultad === "media"
+        );
+      } else {
+        elementosActuales = rios;
+      }
+    } else if (modo === "municipios") {
+      elementosActuales =
+        dificultad === "facil"
+          ? municipios.filter((m) => m.principal)
+          : municipios;
     }
 
     const elementoClickado = elementosActuales.find((e) => e.id === id);
     if (!elementoClickado) return;
 
     const esCorrecto = elementoActual.id === elementoClickado.id;
-    setElementoSeleccionado(elementoClickado);
 
     const nuevosResultados = {
       ...resultados,
@@ -105,14 +132,15 @@ export default function App() {
       }
 
       setElementosRestantes(nuevosElementosRestantes);
-      setElementoSeleccionado(null);
+      setElementoActual(
+        nuevosElementosRestantes.length > 0
+          ? nuevosElementosRestantes[
+              Math.floor(Math.random() * nuevosElementosRestantes.length)
+            ]
+          : null
+      );
 
-      if (nuevosElementosRestantes.length > 0) {
-        const indiceAleatorio = Math.floor(
-          Math.random() * nuevosElementosRestantes.length
-        );
-        setElementoActual(nuevosElementosRestantes[indiceAleatorio]);
-      } else {
+      if (nuevosElementosRestantes.length === 0) {
         setGameState(GAME_STATES.FINISHED);
         clearInterval(intervalId);
       }
@@ -132,7 +160,29 @@ export default function App() {
       .padStart(2, "0")}`;
   };
 
-  const totalElementos = modo === "comarcas" ? comarcas.length : rios.length;
+  // Lista de elementos visibles para el mapa
+  let elementosVisibles = [];
+  if (modo === "comarcas") {
+    elementosVisibles = comarcas;
+  } else if (modo === "rios") {
+    if (dificultad === "facil") {
+      elementosVisibles = rios.filter((r) => r.dificultad === "facil");
+    } else if (dificultad === "media") {
+      elementosVisibles = rios.filter(
+        (r) => r.dificultad === "facil" || r.dificultad === "media"
+      );
+    } else {
+      elementosVisibles = rios;
+    }
+  } else if (modo === "municipios") {
+    // Si la dificultad es "facil", filtramos solo los principales
+    elementosVisibles =
+      dificultad === "facil"
+        ? municipios.filter((m) => m.principal)
+        : municipios;
+  }
+
+  const totalElementos = elementosVisibles.length;
   const elementosCompletados = totalElementos - elementosRestantes.length;
   const porcentajeCompletado =
     totalElementos > 0
@@ -207,8 +257,7 @@ export default function App() {
           <div className="mapa-container">
             <Mapa
               modo={modo}
-              comarcas={comarcas}
-              rios={rios}
+              elementosIds={elementosVisibles.map((e) => e.id)}
               resultados={resultados}
               onClickElemento={handleElementoSeleccionado}
             />

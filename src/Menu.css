@@ -5,11 +5,13 @@
   text-align: center;
   background-color: #f8f9fa;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .menu-container h1 {
-  color: #2c3e50;
+  color: #ffffff;
+  background-color: red;
+  border-radius: 5px;
+  padding: 5px;
   margin-bottom: 2rem;
 }
 
