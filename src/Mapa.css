@@ -1,106 +1,164 @@
 .svg-container {
-  height: 80vh;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+  min-height: 500px;
 }
 
 .comarca {
-  transition: all 0.3s ease-in-out;
-  fill: #00ff08;
+  transition: all var(--transition-base) ease;
+  fill: var(--aragon-gold);
   cursor: pointer;
-  stroke: white;
-  stroke-width: 5;
+  stroke: var(--aragon-yellow);
+  stroke-width: 8;
+  opacity: 0.9;
 }
 
 .comarca:hover {
-  fill: #388e3c;
-  filter: brightness(1.1);
+  fill: var(--aragon-red);
+  opacity: 1;
+  filter: drop-shadow(0 0 12px var(--aragon-red));
+  transform: scale(1.02);
+  stroke-width: 10;
 }
 
 svg {
-  background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 1),
-      rgba(0, 0, 0, 0.8),
-      rgba(0, 0, 0, 0.4)
-    ),
-    linear-gradient(
-      70deg,
-      rgba(255, 251, 0, 1) 11.11%,
-      rgba(255, 0, 0, 1) 11.11%,
-      rgba(255, 0, 0, 1) 22.22%,
-      rgba(255, 251, 0, 1) 22.22%,
-      rgba(255, 251, 0, 1) 33.33%,
-      rgba(255, 0, 0, 1) 33.33%,
-      rgba(255, 0, 0, 1) 44.44%,
-      rgba(255, 251, 0, 1) 44.44%,
-      rgba(255, 251, 0, 1) 55.55%,
-      rgba(255, 0, 0, 1) 55.55%,
-      rgba(255, 0, 0, 1) 66.66%,
-      rgba(255, 251, 0, 1) 66.66%,
-      rgba(255, 251, 0, 1) 77.77%,
-      rgba(255, 0, 0, 1) 77.77%,
-      rgba(255, 0, 0, 1) 88.88%,
-      rgba(255, 251, 0, 1) 88.88%
-    );
+  max-width: 100%;
+  height: auto;
+  background: transparent;
 }
 
 .acierto {
-  fill: #4caf50;
-  filter: drop-shadow(0 0 8px rgba(76, 175, 80, 0.7));
+  fill: var(--success-500) !important;
+  filter: drop-shadow(0 0 12px var(--success-500));
+  animation: pulseSuccess 0.5s ease;
 }
 
 .fallo {
-  fill: #f44336;
-  filter: drop-shadow(0 0 8px rgba(244, 67, 54, 0.7));
+  fill: var(--error-500) !important;
+  filter: drop-shadow(0 0 12px var(--error-500));
+  animation: shake 0.5s ease;
+}
+
+@keyframes pulseSuccess {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 .rio {
-  transition: all 0.5s ease-in-out;
-  stroke-width: 30;
-  stroke: blue;
+  transition: all var(--transition-slow) ease;
+  stroke-width: 35;
+  stroke: var(--info-500);
   cursor: pointer;
   fill: none;
+  opacity: 0.9;
 }
 
 .rio:hover {
   cursor: pointer;
-  stroke: orange;
-  stroke-width: 40;
+  stroke: var(--aragon-gold);
+  stroke-width: 45;
+  opacity: 1;
+  filter: drop-shadow(0 0 12px var(--aragon-gold));
 }
 
 .rio.fallo {
-  fill: none;
-  stroke: red;
+  fill: none !important;
+  stroke: var(--error-500) !important;
+  stroke-width: 45 !important;
+  filter: drop-shadow(0 0 15px var(--error-500)) !important;
 }
 
 .rio.acierto {
-  fill: none;
-  stroke: green;
+  fill: none !important;
+  stroke: var(--success-500) !important;
+  stroke-width: 45 !important;
+  filter: drop-shadow(0 0 15px var(--success-500)) !important;
 }
 
 .contorno {
-  fill: rgba(255, 255, 255, 0.801);
-  stroke: black;
-  stroke-width: 50;
+  fill: var(--dark-bg-secondary);
+  stroke: var(--dark-border);
+  stroke-width: 60;
+  opacity: 0.95;
 }
 
 .municipio {
-  transition: all 0.3s ease-in-out;
+  transition: all var(--transition-base) ease;
   cursor: pointer;
-  r: 100px;
+  fill: var(--aragon-gold);
+  r: 120px;
+  opacity: 0.9;
 }
 
 .municipio:hover {
-  fill: #555555;
-  filter: brightness(1.1);
+  fill: var(--aragon-red);
+  opacity: 1;
+  filter: drop-shadow(0 0 12px var(--aragon-red));
+  r: 140px;
 }
 
 .municipio.acierto {
-  fill: #4caf50;
+  fill: var(--success-500) !important;
+  filter: drop-shadow(0 0 12px var(--success-500));
+  r: 140px;
 }
 
 .municipio.fallo {
-  fill: #f44336;
+  fill: var(--error-500) !important;
+  filter: drop-shadow(0 0 12px var(--error-500));
+  r: 140px;
+}
+
+/* Efectos de feedback */
+.comarca.clicked,
+.rio.clicked,
+.municipio.clicked {
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .svg-container {
+    height: 60vh;
+  }
+
+  .rio {
+    stroke-width: 40;
+  }
+
+  .rio:hover {
+    stroke-width: 50;
+  }
+
+  .municipio {
+    r: 120px;
+  }
+}
+
+@media (max-width: 640px) {
+  .svg-container {
+    height: 50vh;
+  }
+
+  .comarca {
+    stroke-width: 8;
+  }
+
+  .rio {
+    stroke-width: 50;
+  }
+
+  .municipio {
+    r: 150px;
+  }
 }

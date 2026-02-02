@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
 import Mapa from "./components/MapaAragon";
 import Menu from "./components/Menu";
+import Stats from "./components/Stats";
 import comarcasData from "./data/comarcas.json";
 import riosData from "./data/rios.json";
 import municipiosData from "./data/municipios.json";
+import { GAME_STATES } from "./constants/gameConstants";
+import { formatearTiempo } from "./utils/tiempo";
+import { getElementosByModoYDificultad, barajarArray } from "./utils/elementos";
+import { useGameTimer } from "./hooks/useGameTimer";
+import { useGameScore } from "./hooks/useGameScore";
+import { saveRecord, saveStats, getSettings } from "./utils/storage";
+import { playSound } from "./utils/sounds";
+import { checkAchievements } from "./utils/achievements";
 import "./App.css";
-
-const GAME_STATES = {
-  MENU: "menu",
-  PLAYING: "playing",
-  FINISHED: "finished",
-};
 
 export default function App() {
   const [gameState, setGameState] = useState(GAME_STATES.MENU);
@@ -23,55 +26,50 @@ export default function App() {
   const [modo, setModo] = useState(null);
   const [dificultad, setDificultad] = useState(null);
   const [resultados, setResultados] = useState({});
-  const [puntuacion, setPuntuacion] = useState({ aciertos: 0, intentos: 0 });
-  const [tiempoTranscurrido, setTiempoTranscurrido] = useState(0);
-  const [intervalId, setIntervalId] = useState(null);
   const [timerIniciado, setTimerIniciado] = useState(false);
+  const [elementoClickeado, setElementoClickeado] = useState(null);
+  const [showStats, setShowStats] = useState(false);
+  const [settings] = useState(getSettings());
+  const [newAchievements, setNewAchievements] = useState([]);
 
+  // Custom hooks
+  const { tiempoTranscurrido, resetTimer } = useGameTimer(timerIniciado);
+  const {
+    puntuacion,
+    fallos,
+    registrarAcierto,
+    registrarFallo,
+    resetScore,
+    iniciarRespuesta,
+  } = useGameScore();
+
+  // Detectar racha para reproducir sonido especial
   useEffect(() => {
-    let id;
-    if (timerIniciado) {
-      id = setInterval(() => {
-        setTiempoTranscurrido((prev) => prev + 1);
-      }, 1000);
-      setIntervalId(id);
+    if (puntuacion.racha > 0 && puntuacion.racha % 3 === 0) {
+      playSound("streak", settings.soundEnabled);
     }
-    return () => {
-      if (id) clearInterval(id);
-    };
-  }, [timerIniciado]);
+  }, [puntuacion.racha, settings.soundEnabled]);
 
   const startGame = (username, gameMode, difficulty) => {
     setUser({ name: username });
     setResultados({});
-    setPuntuacion({ aciertos: 0, intentos: 0 });
-    setTiempoTranscurrido(0);
+    resetScore();
+    resetTimer();
     setModo(gameMode);
     setDificultad(difficulty);
     setTimerIniciado(false);
+    setElementoClickeado(null);
 
-    let datosModo;
-    if (gameMode === "comarcas") {
-      datosModo = comarcas;
-    } else if (gameMode === "rios") {
-      if (difficulty === "facil") {
-        datosModo = rios.filter((r) => r.dificultad === "facil");
-      } else if (difficulty === "media") {
-        datosModo = rios.filter(
-          (r) => r.dificultad === "facil" || r.dificultad === "media"
-        );
-      } else {
-        datosModo = rios;
-      }
-    } else if (gameMode === "municipios") {
-      datosModo =
-        difficulty === "facil"
-          ? municipios.filter((m) => m.principal)
-          : municipios;
-    }
+    const datosModo = getElementosByModoYDificultad(
+      gameMode,
+      difficulty,
+      comarcas,
+      rios,
+      municipios
+    );
 
     if (datosModo && datosModo.length > 0) {
-      const elementosBarajados = [...datosModo].sort(() => Math.random() - 0.5);
+      const elementosBarajados = barajarArray(datosModo);
       setElementosRestantes(elementosBarajados);
       setElementoActual(elementosBarajados[0]);
     }
@@ -81,34 +79,25 @@ export default function App() {
 
   const handleElementoSeleccionado = (id) => {
     if (!elementoActual) return;
+    
     if (!timerIniciado) {
       setTimerIniciado(true);
+      iniciarRespuesta();
     }
 
-    let elementosActuales;
-    if (modo === "comarcas") {
-      elementosActuales = comarcas;
-    } else if (modo === "rios") {
-      if (dificultad === "facil") {
-        elementosActuales = rios.filter((r) => r.dificultad === "facil");
-      } else if (dificultad === "media") {
-        elementosActuales = rios.filter(
-          (r) => r.dificultad === "facil" || r.dificultad === "media"
-        );
-      } else {
-        elementosActuales = rios;
-      }
-    } else if (modo === "municipios") {
-      elementosActuales =
-        dificultad === "facil"
-          ? municipios.filter((m) => m.principal)
-          : municipios;
-    }
+    const elementosActuales = getElementosByModoYDificultad(
+      modo,
+      dificultad,
+      comarcas,
+      rios,
+      municipios
+    );
 
-    const elementoClickado = elementosActuales.find((e) => e.id === id);
-    if (!elementoClickado) return;
+    const clickeado = elementosActuales.find((e) => e.id === id);
+    if (!clickeado) return;
 
-    const esCorrecto = elementoActual.id === elementoClickado.id;
+    const esCorrecto = elementoActual.id === clickeado.id;
+    setElementoClickeado(clickeado);
 
     const nuevosResultados = {
       ...resultados,
@@ -116,20 +105,21 @@ export default function App() {
     };
     setResultados(nuevosResultados);
 
-    setPuntuacion((prev) => ({
-      aciertos: esCorrecto ? prev.aciertos + 1 : prev.aciertos,
-      intentos: prev.intentos + 1,
-    }));
+    if (esCorrecto) {
+      registrarAcierto();
+      playSound("success", settings.soundEnabled);
+    } else {
+      registrarFallo(elementoActual.id);
+      playSound("error", settings.soundEnabled);
+    }
 
     setTimeout(() => {
-      let nuevosElementosRestantes;
-      if (esCorrecto) {
-        nuevosElementosRestantes = elementosRestantes.filter(
-          (e) => e.id !== elementoActual.id
-        );
-      } else {
-        nuevosElementosRestantes = elementosRestantes;
-      }
+      setElementoClickeado(null);
+      
+      // NUEVA MECÁNICA: Siempre eliminar el elemento actual, aciertes o falles
+      const nuevosElementosRestantes = elementosRestantes.filter(
+        (e) => e.id !== elementoActual.id
+      );
 
       setElementosRestantes(nuevosElementosRestantes);
       setElementoActual(
@@ -141,46 +131,56 @@ export default function App() {
       );
 
       if (nuevosElementosRestantes.length === 0) {
+        // Guardar récord y estadísticas
+        saveRecord(modo, dificultad, {
+          puntuacion: puntuacion.puntos,
+          tiempo: tiempoTranscurrido,
+          aciertos: puntuacion.aciertos + (esCorrecto ? 1 : 0),
+          intentos: puntuacion.intentos + 1,
+        });
+        saveStats({
+          aciertos: puntuacion.aciertos + (esCorrecto ? 1 : 0),
+          intentos: puntuacion.intentos + 1,
+          tiempo: tiempoTranscurrido,
+          fallos,
+        });
+        
+        // Verificar logros
+        const unlockedAchievements = checkAchievements({
+          modo,
+          dificultad,
+          aciertos: puntuacion.aciertos + (esCorrecto ? 1 : 0),
+          intentos: puntuacion.intentos + 1,
+          tiempo: tiempoTranscurrido,
+          maxRacha: puntuacion.maxRacha,
+        });
+        
+        if (unlockedAchievements.length > 0) {
+          setNewAchievements(unlockedAchievements);
+        }
+        
+        playSound("complete", settings.soundEnabled);
         setGameState(GAME_STATES.FINISHED);
-        clearInterval(intervalId);
+        setTimerIniciado(false);
       }
     }, 1000);
   };
 
   const reiniciarJuego = () => {
-    if (intervalId) clearInterval(intervalId);
     setGameState(GAME_STATES.MENU);
-  };
-
-  const formatearTiempo = (segundos) => {
-    const minutos = Math.floor(segundos / 60);
-    const segundosRestantes = segundos % 60;
-    return `${minutos.toString().padStart(2, "0")}:${segundosRestantes
-      .toString()
-      .padStart(2, "0")}`;
+    resetTimer();
+    resetScore();
+    setNewAchievements([]);
   };
 
   // Lista de elementos visibles para el mapa
-  let elementosVisibles = [];
-  if (modo === "comarcas") {
-    elementosVisibles = comarcas;
-  } else if (modo === "rios") {
-    if (dificultad === "facil") {
-      elementosVisibles = rios.filter((r) => r.dificultad === "facil");
-    } else if (dificultad === "media") {
-      elementosVisibles = rios.filter(
-        (r) => r.dificultad === "facil" || r.dificultad === "media"
-      );
-    } else {
-      elementosVisibles = rios;
-    }
-  } else if (modo === "municipios") {
-    // Si la dificultad es "facil", filtramos solo los principales
-    elementosVisibles =
-      dificultad === "facil"
-        ? municipios.filter((m) => m.principal)
-        : municipios;
-  }
+  const elementosVisibles = getElementosByModoYDificultad(
+    modo,
+    dificultad,
+    comarcas,
+    rios,
+    municipios
+  );
 
   const totalElementos = elementosVisibles.length;
   const elementosCompletados = totalElementos - elementosRestantes.length;
@@ -190,7 +190,15 @@ export default function App() {
       : 0;
 
   if (gameState === GAME_STATES.MENU) {
-    return <Menu onStartGame={startGame} />;
+    return (
+      <>
+        <Menu 
+          onStartGame={startGame} 
+          onShowStats={() => setShowStats(true)} 
+        />
+        {showStats && <Stats onClose={() => setShowStats(false)} />}
+      </>
+    );
   }
 
   if (gameState === GAME_STATES.PLAYING && !elementoActual) {
@@ -203,8 +211,9 @@ export default function App() {
         <h2>¡Juego Terminado, {user?.name}!</h2>
         <div className="score">
           <p>Tiempo total: {formatearTiempo(tiempoTranscurrido)}</p>
+          <p>Puntos totales: {puntuacion.puntos}</p>
           <p>
-            Puntuación: {puntuacion.aciertos} de {puntuacion.intentos}
+            Aciertos: {puntuacion.aciertos} de {puntuacion.intentos}
           </p>
           <p>
             Porcentaje de aciertos:{" "}
@@ -213,10 +222,35 @@ export default function App() {
               : 0}
             %
           </p>
+          {puntuacion.maxRacha > 0 && (
+            <p>Mejor racha: {puntuacion.maxRacha} 🔥</p>
+          )}
         </div>
-        <button onClick={reiniciarJuego} className="btn-primary">
-          Volver al menú principal
-        </button>
+        
+        {newAchievements.length > 0 && (
+          <div className="achievements-notification">
+            <h3>🏆 ¡Logros Desbloqueados!</h3>
+            {newAchievements.map(achievement => (
+              <div key={achievement.id} className="achievement-item">
+                <span className="achievement-icon">{achievement.icon}</span>
+                <div>
+                  <strong>{achievement.name}</strong>
+                  <p>{achievement.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <div className="finish-buttons">
+          <button onClick={reiniciarJuego} className="btn-primary">
+            Volver al menú principal
+          </button>
+          <button onClick={() => setShowStats(true)} className="btn-secondary">
+            Ver estadísticas
+          </button>
+        </div>
+        {showStats && <Stats onClose={() => setShowStats(false)} />}
       </div>
     );
   }
@@ -230,17 +264,18 @@ export default function App() {
             ⏱️ {formatearTiempo(tiempoTranscurrido)}
           </span>
           <span>Completado: {porcentajeCompletado}%</span>
-          <span>
-            Puntuación: {puntuacion.aciertos}/{puntuacion.intentos}
-          </span>
+          <span>Puntos: {puntuacion.puntos}</span>
+          {puntuacion.racha > 0 && (
+            <span className="streak">🔥 Racha: {puntuacion.racha}</span>
+          )}
         </div>
       </div>
       <header>
-        <h1>¿Dónde está {elementoActual?.nombre}?</h1>
-        <div className="puntuacion">
+        <h1 aria-live="polite">¿Dónde está {elementoActual?.nombre}?</h1>
+        <div className="puntuacion" aria-live="polite" aria-atomic="true">
           Completados: {elementosCompletados} de {totalElementos}
         </div>
-        <div className="barra-progreso">
+        <div className="barra-progreso" role="progressbar" aria-valuenow={porcentajeCompletado} aria-valuemin="0" aria-valuemax="100" aria-label="Progreso del juego">
           <div
             className="progreso"
             style={{ width: `${porcentajeCompletado}%` }}
@@ -253,6 +288,11 @@ export default function App() {
           <div className="panel-quiz">
             <h3>Haz clic en el mapa:</h3>
             <h2>{elementoActual?.nombre}</h2>
+            {elementoClickeado && (
+              <p className="clicked-feedback" aria-live="assertive">
+                Clickeaste: {elementoClickeado.nombre}
+              </p>
+            )}
           </div>
           <div className="mapa-container">
             <Mapa

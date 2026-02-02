@@ -1,48 +1,39 @@
-import { useEffect, useState } from "react";
+import { useMemo, memo } from "react";
 import svgText from "../assets/mapaAragon.svg?raw";
 import "../Mapa.css";
 
-export default function Mapa({
+const Mapa = memo(function Mapa({
   modo,
   elementosIds,
   resultados,
   onClickElemento,
 }) {
-  const [contornoD, setContornoD] = useState(null);
-  const [viewBox, setViewBox] = useState("0 0 39759 54309");
-  const [comarcas, setComarcas] = useState([]);
-  const [rios, setRios] = useState([]);
-  const [municipios, setMunicipios] = useState([]);
-
-  useEffect(() => {
+  // Parsear SVG solo una vez con useMemo
+  const svgData = useMemo(() => {
     const doc = new DOMParser().parseFromString(svgText, "image/svg+xml");
     const root = doc.documentElement;
 
-    const vb = root.getAttribute("viewBox");
-    if (vb) setViewBox(vb);
-
+    const viewBox = root.getAttribute("viewBox") || "0 0 39759 54309";
     const contorno = doc.getElementById("contorno");
-    if (contorno) setContornoD(contorno.getAttribute("d"));
+    const contornoD = contorno ? contorno.getAttribute("d") : null;
 
-    const comarcasPaths = Array.from(
+    const comarcas = Array.from(
       doc.querySelectorAll("#comarcas path")
     ).map((p) => ({
       id: p.id,
       d: p.getAttribute("d"),
       nombre: p.getAttribute("title") || p.id,
     }));
-    setComarcas(comarcasPaths);
 
-    const riosPaths = Array.from(doc.querySelectorAll("#rios path")).map(
+    const rios = Array.from(doc.querySelectorAll("#rios path")).map(
       (p) => ({
         id: p.id,
         d: p.getAttribute("d"),
         nombre: p.getAttribute("title") || p.id,
       })
     );
-    setRios(riosPaths);
 
-    const municipiosCircles = Array.from(
+    const municipios = Array.from(
       doc.querySelectorAll("#municipios circle")
     ).map((c) => ({
       id: c.id,
@@ -51,23 +42,28 @@ export default function Mapa({
       r: c.getAttribute("r"),
       nombre: c.getAttribute("title") || c.id,
     }));
-    setMunicipios(municipiosCircles);
+
+    return { viewBox, contornoD, comarcas, rios, municipios };
   }, []);
 
-  let elementos = [];
-  if (modo === "comarcas") {
-    elementos = comarcas.filter((c) => elementosIds.includes(c.id));
-  } else if (modo === "rios") {
-    elementos = rios.filter((r) => elementosIds.includes(r.id));
-  } else if (modo === "municipios") {
-    elementos = municipios.filter((m) => elementosIds.includes(m.id));
-  }
+  // Filtrar elementos según modo
+  const elementos = useMemo(() => {
+    let filtered = [];
+    if (modo === "comarcas") {
+      filtered = svgData.comarcas.filter((c) => elementosIds.includes(c.id));
+    } else if (modo === "rios") {
+      filtered = svgData.rios.filter((r) => elementosIds.includes(r.id));
+    } else if (modo === "municipios") {
+      filtered = svgData.municipios.filter((m) => elementosIds.includes(m.id));
+    }
+    return filtered;
+  }, [modo, elementosIds, svgData]);
 
   return (
     <div className="svg-container">
-      <svg viewBox={viewBox} preserveAspectRatio="xMidYMid meet">
-        {contornoD && (
-          <path d={contornoD} className="contorno" pointerEvents="none" />
+      <svg viewBox={svgData.viewBox} preserveAspectRatio="xMidYMid meet">
+        {svgData.contornoD && (
+          <path d={svgData.contornoD} className="contorno" pointerEvents="none" />
         )}
 
         {elementos.map((el) => {
@@ -112,4 +108,6 @@ export default function Mapa({
       </svg>
     </div>
   );
-}
+});
+
+export default Mapa;
